@@ -10,7 +10,7 @@ class ChapterScraper:
         self.session = requests.Session()
         self.session.headers
         self.session.headers.update(self.get_header())
-
+        
 
     def get_header(self):
         headers = {
