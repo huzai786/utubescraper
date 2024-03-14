@@ -17,8 +17,11 @@ class GUI:
             dpg.add_button(label="OK", callback=lambda: dpg.delete_item("error"))
 
     def success_popup(self):
-        with dpg.window(label="Success", width=300, height=100, pos=[240, 200],  no_close=True, no_collapse=True, tag="success", modal=True):
+        with dpg.window(label="Success", width=300, height=200, pos=[240, 200],  no_close=True, no_collapse=True, tag="success", modal=True):
             dpg.add_text("Scraping completed!")
+            dpg.add_text(dpg.get_value("total_vid_scraped"))
+            dpg.add_text(dpg.get_value("total_video_processed"))
+            dpg.add_text(dpg.get_value("total_chapter_found"))
             dpg.add_button(label="OK", callback=lambda: dpg.delete_item("success"))
 
     def scraper_thread(self, url, excel_name, limit):
@@ -56,6 +59,7 @@ class GUI:
             dpg.set_value("status", "Status: Running")
 
         if self.scrapingthread and not self.scrapingthread.is_alive():
+            self.success_popup()
             dpg.set_value("total_vid_scraped", "Total Videos Scraped: 0")
             dpg.set_value("total_video_processed", "Total Videos Processed: 0")
             dpg.set_value("total_chapter_found", "Total Chapters Found: 0")
@@ -69,7 +73,7 @@ class GUI:
             dpg.configure_item("max_limit", enabled=True)
             dpg.configure_item("stop", enabled=False)
             dpg.configure_item("start", enabled=True)
-            self.success_popup()
+            
 
     def stop_thread(self):
         self.event.set()

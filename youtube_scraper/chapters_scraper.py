@@ -73,7 +73,7 @@ class ChapterScraper:
             if self.manager.event.is_set():
                 self.manager.save_data()
                 return
-            if self.manager.video_search_done:
+            if self.manager.video_search_done and len(self.manager.video_ids) == 0:
                 self.manager.save_data()
                 return
             if len(self.manager.video_ids) > 0:
