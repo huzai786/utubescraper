@@ -3,7 +3,7 @@ import dearpygui.dearpygui as dpg
 import time
 import queue
 
-from guitest import YoutubeChapterScraperSelenium
+from selenium_version import YoutubeChapterScraperSelenium
 
 class GUI:
     def __init__(self) -> None:
@@ -24,13 +24,9 @@ class GUI:
 
     def scraper_thread(self, url, excel_name, limit):
         self.event = threading.Event()
-        sidework = YoutubeChapterScraperSelenium(url, excel_name, limit, self.queue)
-        sidework.startWork(self.event)
+        scraper = YoutubeChapterScraperSelenium(url, excel_name, limit, self.queue, self.event)
+        scraper.startScraping()
 
-    def update_gui_values(self, total_videos_found, total_videos_scraped, total_chapters_found):
-        dpg.set_value("total_vid_found", f"Total Videos Found: {total_videos_found}")
-        dpg.set_value("total_vid_scraped", f"Total Videos Scraped: {total_videos_scraped}")
-        dpg.set_value("total_chapter_found", f"Total Chapters Found: {total_chapters_found}")
 
     def start_scraper(self, sender, app_data):
         url = dpg.get_value("search_url")
@@ -51,11 +47,19 @@ class GUI:
     def check_queue_callback(self):
         if not self.queue.empty():
             value = self.queue.get()
-            self.update_gui_values(value.get("total_videos_found"), value.get("total_videos_scraped"), value.get("total_chapters_found"))
+            if total_videos_scraped := value.get("total_videos_scraped", None):
+                dpg.set_value("total_vid_scraped", f"Total Videos Scraped: {total_videos_scraped}")
+            if video_processed := value.get("video_processed", None):
+                dpg.set_value("total_video_processed", f"Total Videos Processed: {video_processed}")
+            if total_chapters_found := value.get("total_chapters_found", None):
+                dpg.set_value("total_chapter_found", f"Total Chapters Found: {total_chapters_found}")
+
             dpg.set_value("status", "Status: Running")
 
         if self.scrapingthread and not self.scrapingthread.is_alive():
-            self.update_gui_values(0, 0, 0)
+            dpg.set_value("total_vid_scraped", "0")
+            dpg.set_value("total_video_processed", "0")
+            dpg.set_value("total_chapter_found", "0")
             dpg.set_value("status", "Status: Not Running")
             dpg.set_value("search_url", "")
             dpg.set_value("excel_name", "")
@@ -101,8 +105,8 @@ class GUI:
             dpg.add_button(label="Start", callback=self.start_scraper, pos=[10, 510], width=100, height=40, tag="start")
             dpg.add_button(label="Stop", callback=self.stop_thread, pos=[120, 510], width=100, height=40, enabled=False, tag="stop")
             dpg.add_separator()
-            dpg.add_text("Total Videos Found: 0", tag="total_vid_found")
             dpg.add_text("Total Videos Scraped: 0", tag="total_vid_scraped")
+            dpg.add_text("Total Videos Processed: 0", tag="total_video_processed")
             dpg.add_text("Total Chapters Found: 0", tag="total_chapter_found")
             dpg.add_text("Status: Not Running", tag="status", pos=[600, 520])
             dpg.bind_font(self.default_font)

@@ -5,12 +5,17 @@ import json
 import logging
 import jsonpath_ng.ext as jp
 
+
 class ChapterScraper:
-    def __init__(self) -> None:
+    def __init__(self, manager) -> None:
+        self.manager = manager
         self.session = requests.Session()
         self.session.headers
         self.session.headers.update(self.get_header())
-        
+        self.video_processed = 0
+        self.total_chapters_found = 0
+        self.completed = set()
+
 
     def get_header(self):
         headers = {
@@ -63,4 +68,22 @@ class ChapterScraper:
             except json.JSONDecodeError as e:
                 logging.error(f"An error occurred: {e}")
                 return None
-            
+
+    def scrape_chapters(self):
+        while True:
+            if self.manager.event.set():
+                self.manager.save_data()
+                return
+            if len(self.manager.video_ids) > 0:
+                vid = self.manager.video_ids[0]
+                if vid in self.completed:
+                    continue
+                chapters = self.get_chapters(self.manager.video_ids[0])
+                del self.manager.video_ids[0]
+                if chapters:
+                    self.manager.update_chapters(chapters)
+                    self.total_chapters_found += len(chapters)
+                    self.manager.update_ui_queue.put({"total_chapters_found": f"{self.total_chapters_found}"})
+                
+                self.video_processed += 1
+                self.manager.update_ui_queue.put({"video_processed": f"{self.video_processed}"})
