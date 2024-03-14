@@ -1,6 +1,5 @@
 import threading
 import dearpygui.dearpygui as dpg
-import time
 import queue
 
 from selenium_version import YoutubeChapterScraperSelenium
@@ -57,9 +56,9 @@ class GUI:
             dpg.set_value("status", "Status: Running")
 
         if self.scrapingthread and not self.scrapingthread.is_alive():
-            dpg.set_value("total_vid_scraped", "0")
-            dpg.set_value("total_video_processed", "0")
-            dpg.set_value("total_chapter_found", "0")
+            dpg.set_value("total_vid_scraped", "Total Videos Scraped: 0")
+            dpg.set_value("total_video_processed", "Total Videos Processed: 0")
+            dpg.set_value("total_chapter_found", "Total Chapters Found: 0")
             dpg.set_value("status", "Status: Not Running")
             dpg.set_value("search_url", "")
             dpg.set_value("excel_name", "")

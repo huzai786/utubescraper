@@ -16,15 +16,19 @@ class YoutubeChapterScraperSelenium:
         self.chapters = {}
         self.selenium_search = SeleniumSearch(self)
         self.chapter_scraper = ChapterScraper(self)
+        self.video_search_done = False
+        self.thread = None
 
     def startScraping(self):
         # start chapter scraper loop that will pool the video ids and keep updating the self.chapters
         self.start_chapter_scraper_thread()
         self.selenium_search.search_results(self.url, self.limit) # this will keep filling video ids
+        self.video_search_done = True
+        self.thread.join()
 
     def start_chapter_scraper_thread(self):
-        thread = Thread(target=self.chapter_scraper.scrape_chapters)
-        thread.start()
+        self.thread = Thread(target=self.chapter_scraper.scrape_chapters)
+        self.thread.start()
 
     def save_data(self):
         wb = Workbook()
@@ -39,7 +43,7 @@ class YoutubeChapterScraperSelenium:
         filename = self.excelname
         if '.xlsx' not in filename:
             filename += '.xlsx'
-        wb.save(filename)
+        wb.save(f"data/{filename}")
     
     def update_chapters(self, chapters: str):
         for chapter in chapters:

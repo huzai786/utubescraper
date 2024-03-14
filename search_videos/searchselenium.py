@@ -35,7 +35,7 @@ class SeleniumSearch:
             WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//ytd-section-list-renderer//ytd-item-section-renderer//ytd-video-renderer")))
             time.sleep(1.5)
             new_height = self.driver.execute_script("return document.documentElement.scrollHeight")
-            if self.manager.event.set():
+            if self.manager.event.is_set():
                 break
             if new_height == last_height:
                 print("No More Results Found!")

@@ -56,7 +56,6 @@ class ChapterScraper:
         if not content:
             return None
         jsontext = self.get_script_tag(content)
-        
         if jsontext:
             try:
                 data = json.loads(jsontext)
@@ -71,7 +70,10 @@ class ChapterScraper:
 
     def scrape_chapters(self):
         while True:
-            if self.manager.event.set():
+            if self.manager.event.is_set():
+                self.manager.save_data()
+                return
+            if self.manager.video_search_done:
                 self.manager.save_data()
                 return
             if len(self.manager.video_ids) > 0:
@@ -87,3 +89,4 @@ class ChapterScraper:
                 
                 self.video_processed += 1
                 self.manager.update_ui_queue.put({"video_processed": f"{self.video_processed}"})
+            
