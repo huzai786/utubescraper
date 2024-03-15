@@ -4,18 +4,18 @@ from bs4 import BeautifulSoup
 import json
 import logging
 import jsonpath_ng.ext as jp
-
+from threading import Lock
 
 class ChapterScraper:
-    def __init__(self, manager) -> None:
+    def __init__(self, manager = None, testing=False) -> None:
         self.manager = manager
+        self.testing = testing
+        if not self.testing and not self.manager:
+            raise Exception("Manager cant be none in production mode")
         self.session = requests.Session()
         self.session.headers
         self.session.headers.update(self.get_header())
-        self.video_processed = 0
-        self.total_chapters_found = 0
-        self.completed = set()
-
+        self.lock = Lock()
 
     def get_header(self):
         headers = {
@@ -35,8 +35,8 @@ class ChapterScraper:
             response_body = res.text
             return response_body
 
-        except Exception as e:
-            logging.error(f"An error occurred: {e}")
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred: {e}")
             return None
 
     def get_script_tag(self, content: str) -> str | None:
@@ -65,10 +65,12 @@ class ChapterScraper:
                     chapter.add(chp.value)
                 return chapter
             except json.JSONDecodeError as e:
-                logging.error(f"An error occurred: {e}")
+                print(f"An error occurred: {e} line: 68")
                 return None
 
     def scrape_chapters(self):
+        if self.testing:
+            raise Exception("Can't use in testing mode")
         while True:
             if self.manager.event.is_set():
                 self.manager.save_data()
@@ -77,16 +79,17 @@ class ChapterScraper:
                 self.manager.save_data()
                 return
             if len(self.manager.video_ids) > 0:
-                vid = self.manager.video_ids[0]
-                if vid in self.completed:
-                    continue
-                chapters = self.get_chapters(self.manager.video_ids[0])
-                del self.manager.video_ids[0]
+                vid = self.get_next_video_id()
+                chapters = self.get_chapters(vid)
                 if chapters:
                     self.manager.update_chapters(chapters)
-                    self.total_chapters_found += len(chapters)
-                    self.manager.update_ui_queue.put({"total_chapters_found": f"{self.total_chapters_found}"})
-                
-                self.video_processed += 1
-                self.manager.update_ui_queue.put({"video_processed": f"{self.video_processed}"})
-            
+                    self.manager.total_chapters_found += len(chapters)
+                    self.manager.update_ui_queue.put({"total_chapters_found": f"{self.manager.total_chapters_found}"})
+                self.manager.video_processed += 1
+                self.manager.update_ui_queue.put({"video_processed": f"{self.manager.video_processed}"})
+
+    def get_next_video_id(self):
+        with self.lock: 
+            vid = self.manager.video_ids.pop(0)
+        return vid
+    

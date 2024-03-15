@@ -1,8 +1,10 @@
+import os
 import threading
+import time
 import dearpygui.dearpygui as dpg
 import queue
 
-from selenium_version import YoutubeChapterScraperSelenium
+from youtube_scraper.selenium_version import YoutubeChapterScraperSelenium
 
 class GUI:
     def __init__(self) -> None:
@@ -10,6 +12,10 @@ class GUI:
         self.default_font = None
         self.scrapingthread = None
         self.event = None
+        self.start_time = None
+        self.end_time = None
+        if not os.path.exists("data"):
+            os.mkdir("data")
 
     def error_popup(self, sender, app_data):
         with dpg.window(label="Error", width=300, height=100, pos=[240, 200],  no_close=True, no_collapse=True, tag="error", modal=True):
@@ -17,11 +23,12 @@ class GUI:
             dpg.add_button(label="OK", callback=lambda: dpg.delete_item("error"))
 
     def success_popup(self):
-        with dpg.window(label="Success", width=300, height=200, pos=[240, 200],  no_close=True, no_collapse=True, tag="success", modal=True):
+        with dpg.window(label="Success", width=300, height=220, pos=[240, 200],  no_close=True, no_collapse=True, tag="success", modal=True):
             dpg.add_text("Scraping completed!")
             dpg.add_text(dpg.get_value("total_vid_scraped"))
             dpg.add_text(dpg.get_value("total_video_processed"))
             dpg.add_text(dpg.get_value("total_chapter_found"))
+            dpg.add_text(f"In {self.end_time - self.start_time:.2f} seconds")
             dpg.add_button(label="OK", callback=lambda: dpg.delete_item("success"))
 
     def scraper_thread(self, url, excel_name, limit):
@@ -43,6 +50,7 @@ class GUI:
             dpg.configure_item("max_limit", enabled=False)
             dpg.configure_item("stop", enabled=True)
             dpg.configure_item("start", enabled=False)
+            self.start_time = time.perf_counter()
             self.scrapingthread = threading.Thread(target=self.scraper_thread, args=(url, excel_name, limit))
             self.scrapingthread.start()
 
@@ -59,7 +67,11 @@ class GUI:
             dpg.set_value("status", "Status: Running")
 
         if self.scrapingthread and not self.scrapingthread.is_alive():
+            self.end_time = time.perf_counter()
             self.success_popup()
+            self.start_time = None
+            self.end_time = None
+
             dpg.set_value("total_vid_scraped", "Total Videos Scraped: 0")
             dpg.set_value("total_video_processed", "Total Videos Processed: 0")
             dpg.set_value("total_chapter_found", "Total Chapters Found: 0")
@@ -73,6 +85,7 @@ class GUI:
             dpg.configure_item("max_limit", enabled=True)
             dpg.configure_item("stop", enabled=False)
             dpg.configure_item("start", enabled=True)
+            
             
 
     def stop_thread(self):
