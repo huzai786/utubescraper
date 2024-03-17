@@ -33,6 +33,7 @@ class ChapterScraper:
         try:
             res = self.session.get(url)
             if res.status_code == 429:
+                print(f"Encountered 429 too many requests, sleeping for {self.sleep_count}")
                 time.sleep(self.sleep_count)
                 self.too_many_request_counter += 1
                 return None

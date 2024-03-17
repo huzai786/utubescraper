@@ -31,17 +31,17 @@ class GUI:
             dpg.add_text(f"In {self.end_time - self.start_time:.2f} seconds")
             dpg.add_button(label="OK", callback=lambda: dpg.delete_item("success"))
 
-    def scraper_thread(self, url, excel_name, limit):
+    def scraper_thread(self, query, excel_name, limit):
         self.event = threading.Event()
-        scraper = YoutubeChapterScraperApi(url, excel_name, limit, self.queue, self.event)
+        scraper = YoutubeChapterScraperApi(query, excel_name, limit, self.queue, self.event)
         scraper.startScraping()
 
 
     def start_scraper(self, sender, app_data):
-        url = dpg.get_value("search_query")
+        query = dpg.get_value("search_query")
         excel_name = dpg.get_value("excel_name")
         limit = dpg.get_value("max_limit")
-        if not url or not excel_name or not limit:
+        if not query or not excel_name or not limit:
             self.error_popup(None, None)
             return
         else:
@@ -51,13 +51,13 @@ class GUI:
             dpg.configure_item("stop", enabled=True)
             dpg.configure_item("start", enabled=False)
             self.start_time = time.perf_counter()
-            self.scrapingthread = threading.Thread(target=self.scraper_thread, args=(url, excel_name, limit))
+            self.scrapingthread = threading.Thread(target=self.scraper_thread, args=(query, excel_name, limit))
             self.scrapingthread.start()
 
     def check_queue_callback(self):
         if not self.queue.empty():
             value = self.queue.get()
-            if total_videos_found := value.get("total_videos_found", None):
+            if total_videos_found := value.get("total_vid_found", None):
                 dpg.set_value("total_vid_found", f"Total Videos Found: {total_videos_found}")
             if video_processed := value.get("video_processed", None):
                 dpg.set_value("total_video_processed", f"Total Videos Processed: {video_processed}")

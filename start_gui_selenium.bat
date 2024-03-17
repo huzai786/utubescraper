@@ -11,7 +11,7 @@ if not exist env\Scripts\activate.bat (
 
 call env\Scripts\activate.bat
 
-python main.py
+python mainselenium.py
 
 deactivate
 PAUSE

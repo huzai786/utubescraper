@@ -39,6 +39,8 @@ class GUI:
 
     def start_scraper(self, sender, app_data):
         url = dpg.get_value("search_url")
+        if "https://" not in url:
+            raise Exception("Please Enter a url!")
         excel_name = dpg.get_value("excel_name")
         limit = dpg.get_value("max_limit")
         if not url or not excel_name or not limit:
@@ -93,7 +95,7 @@ class GUI:
 
     def initiate_gui(self):
         dpg.create_context()
-        dpg.create_viewport(title='Youtube Scraper', width=800, height=600, vsync=True)
+        dpg.create_viewport(title='Youtube Scraper Selenium Version', width=800, height=600, vsync=True)
         dpg.setup_dearpygui()
 
         with dpg.font_registry():
@@ -110,7 +112,7 @@ class GUI:
 
         dpg.bind_theme(global_theme)
         with dpg.window(tag="Youtube Scraper"):
-            dpg.add_text("Youtube Scraper", indent=320)
+            dpg.add_text("Youtube Scraper Selenium Version", indent=250)
             dpg.add_text("Enter URL:")
             dpg.add_input_text(tag="search_url", width=800)
             dpg.add_text("Enter Excel File name: ")

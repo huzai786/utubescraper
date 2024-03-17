@@ -11,7 +11,7 @@ if not exist env\Scripts\activate.bat (
 
 call env\Scripts\activate.bat
 
-python api_version\mainapi.py
+python mainapi.py
 
 deactivate
 PAUSE

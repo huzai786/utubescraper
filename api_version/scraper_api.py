@@ -4,17 +4,18 @@ from threading import Event, Thread
 from api_version.apisearch import ApiSearch
 from api_version.chapters_scraper import ChapterScraper
 from openpyxl import Workbook
+from settings import api_key
 
 class YoutubeChapterScraperApi:
-    def __init__(self, url, excelname, limit, update_ui_queue: queue.Queue, event: Event) -> None:
-        self.url = url
+    def __init__(self, query, excelname, limit, update_ui_queue: queue.Queue, event: Event) -> None:
+        self.query = query
         self.excelname: str = excelname
         self.limit = limit
         self.update_ui_queue = update_ui_queue
         self.event = event
         self.video_ids = []
         self.chapters = {}
-        self.api_search = ApiSearch(self)
+        self.api_search = ApiSearch(api_key, self)
         self.chapter_scraper1 = ChapterScraper(self)
         self.chapter_scraper2 = ChapterScraper(self)
         self.chapter_scraper3 = ChapterScraper(self)
@@ -26,7 +27,7 @@ class YoutubeChapterScraperApi:
         self.thread3 = None
 
     def startScraping(self):
-        self.video_ids = self.api_search.search_results(self.url, self.limit)
+        self.video_ids = self.api_search.search_results(self.query, self.limit)
         self.start_chapter_scraper_thread()
 
 
