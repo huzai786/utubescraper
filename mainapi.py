@@ -4,7 +4,7 @@ import time
 import dearpygui.dearpygui as dpg
 import queue
 
-from youtube_scraper.selenium_version import YoutubeChapterScraperSelenium
+from api_version.scraper_api import YoutubeChapterScraperApi
 
 class GUI:
     def __init__(self) -> None:
@@ -25,7 +25,7 @@ class GUI:
     def success_popup(self):
         with dpg.window(label="Success", width=300, height=220, pos=[240, 200],  no_close=True, no_collapse=True, tag="success", modal=True):
             dpg.add_text("Scraping completed!")
-            dpg.add_text(dpg.get_value("total_vid_scraped"))
+            dpg.add_text(dpg.get_value("total_vid_found"))
             dpg.add_text(dpg.get_value("total_video_processed"))
             dpg.add_text(dpg.get_value("total_chapter_found"))
             dpg.add_text(f"In {self.end_time - self.start_time:.2f} seconds")
@@ -33,19 +33,19 @@ class GUI:
 
     def scraper_thread(self, url, excel_name, limit):
         self.event = threading.Event()
-        scraper = YoutubeChapterScraperSelenium(url, excel_name, limit, self.queue, self.event)
+        scraper = YoutubeChapterScraperApi(url, excel_name, limit, self.queue, self.event)
         scraper.startScraping()
 
 
     def start_scraper(self, sender, app_data):
-        url = dpg.get_value("search_url")
+        url = dpg.get_value("search_query")
         excel_name = dpg.get_value("excel_name")
         limit = dpg.get_value("max_limit")
         if not url or not excel_name or not limit:
             self.error_popup(None, None)
             return
         else:
-            dpg.configure_item("search_url", enabled=False)
+            dpg.configure_item("search_query", enabled=False)
             dpg.configure_item("excel_name", enabled=False)
             dpg.configure_item("max_limit", enabled=False)
             dpg.configure_item("stop", enabled=True)
@@ -57,8 +57,8 @@ class GUI:
     def check_queue_callback(self):
         if not self.queue.empty():
             value = self.queue.get()
-            if total_videos_scraped := value.get("total_videos_scraped", None):
-                dpg.set_value("total_vid_scraped", f"Total Videos Scraped: {total_videos_scraped}")
+            if total_videos_found := value.get("total_videos_found", None):
+                dpg.set_value("total_vid_found", f"Total Videos Found: {total_videos_found}")
             if video_processed := value.get("video_processed", None):
                 dpg.set_value("total_video_processed", f"Total Videos Processed: {video_processed}")
             if total_chapters_found := value.get("total_chapters_found", None):
@@ -72,15 +72,15 @@ class GUI:
             self.start_time = None
             self.end_time = None
 
-            dpg.set_value("total_vid_scraped", "Total Videos Scraped: 0")
+            dpg.set_value("total_vid_found", "Total Videos Found: 0")
             dpg.set_value("total_video_processed", "Total Videos Processed: 0")
             dpg.set_value("total_chapter_found", "Total Chapters Found: 0")
             dpg.set_value("status", "Status: Not Running")
-            dpg.set_value("search_url", "")
+            dpg.set_value("search_query", "")
             dpg.set_value("excel_name", "")
             dpg.set_value("max_limit", 100)
             self.scrapingthread = None
-            dpg.configure_item("search_url", enabled=True)
+            dpg.configure_item("search_query", enabled=True)
             dpg.configure_item("excel_name", enabled=True)
             dpg.configure_item("max_limit", enabled=True)
             dpg.configure_item("stop", enabled=False)
@@ -93,7 +93,7 @@ class GUI:
 
     def initiate_gui(self):
         dpg.create_context()
-        dpg.create_viewport(title='Youtube Scraper', width=800, height=600, vsync=True)
+        dpg.create_viewport(title='Youtube Scraper Api Version', width=800, height=600, vsync=True)
         dpg.setup_dearpygui()
 
         with dpg.font_registry():
@@ -110,9 +110,9 @@ class GUI:
 
         dpg.bind_theme(global_theme)
         with dpg.window(tag="Youtube Scraper"):
-            dpg.add_text("Youtube Scraper", indent=320)
-            dpg.add_text("Enter URL:")
-            dpg.add_input_text(tag="search_url", width=800)
+            dpg.add_text("Youtube Scraper Api Version", indent=280)
+            dpg.add_text("Enter query:")
+            dpg.add_input_text(tag="search_query", width=300)
             dpg.add_text("Enter Excel File name: ")
             dpg.add_input_text(tag="excel_name", width=300)
             dpg.add_text("Enter Max limit: ")
@@ -121,7 +121,7 @@ class GUI:
             dpg.add_button(label="Start", callback=self.start_scraper, pos=[10, 510], width=100, height=40, tag="start")
             dpg.add_button(label="Stop", callback=self.stop_thread, pos=[120, 510], width=100, height=40, enabled=False, tag="stop")
             dpg.add_separator()
-            dpg.add_text("Total Videos Scraped: 0", tag="total_vid_scraped")
+            dpg.add_text("Total Videos Found: 0", tag="total_vid_found")
             dpg.add_text("Total Videos Processed: 0", tag="total_video_processed")
             dpg.add_text("Total Chapters Found: 0", tag="total_chapter_found")
             dpg.add_text("Status: Not Running", tag="status", pos=[600, 520])

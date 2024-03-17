@@ -1,8 +1,8 @@
 import time
 import queue
 from threading import Event, Thread, Lock
-from youtube_scraper.searchselenium import SeleniumSearch
-from youtube_scraper.chapters_scraper import ChapterScraper
+from selenium_version.searchselenium import SeleniumSearch
+from selenium_version.chapters_scraper import ChapterScraper
 from openpyxl import Workbook
 
 class YoutubeChapterScraperSelenium:
