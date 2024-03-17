@@ -39,14 +39,14 @@ class GUI:
 
     def start_scraper(self, sender, app_data):
         url = dpg.get_value("search_url")
-        if "https://" not in url:
-            raise Exception("Please Enter a url!")
         excel_name = dpg.get_value("excel_name")
         limit = dpg.get_value("max_limit")
         if not url or not excel_name or not limit:
             self.error_popup(None, None)
             return
         else:
+            if "https://" not in url:
+                raise Exception("Please Enter a url!")
             dpg.configure_item("search_url", enabled=False)
             dpg.configure_item("excel_name", enabled=False)
             dpg.configure_item("max_limit", enabled=False)
