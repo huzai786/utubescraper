@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import threading
 import time
@@ -31,9 +32,17 @@ class GUI:
             dpg.add_text(f"In {self.end_time - self.start_time:.2f} seconds")
             dpg.add_button(label="OK", callback=lambda: dpg.delete_item("success"))
 
-    def scraper_thread(self, query, excel_name, limit):
+    def scraper_thread(self, query, excel_name, limit, published_after, published_before):
         self.event = threading.Event()
-        scraper = YoutubeChapterScraperApi(query, excel_name, limit, self.queue, self.event)
+        if published_after['year'] == 20:
+            published_after = None
+        else:
+            published_after = datetime(year=1900 + published_after['year'], month=published_after['month'] + 1, day=published_after['month_day'])
+        if published_before['year'] == 20:
+            published_before = None
+        else:
+            published_before = datetime(year=1900 + published_before['year'], month=published_before['month'] + 1, day=published_before['month_day'])
+        scraper = YoutubeChapterScraperApi(query, excel_name, limit, self.queue, self.event, published_after=published_after, published_before=published_before)
         scraper.startScraping()
 
 
@@ -41,6 +50,8 @@ class GUI:
         query = dpg.get_value("search_query")
         excel_name = dpg.get_value("excel_name")
         limit = dpg.get_value("max_limit")
+        published_after = dpg.get_value("published_after")
+        published_before = dpg.get_value("published_before")
         if not query or not excel_name or not limit:
             self.error_popup(None, None)
             return
@@ -51,7 +62,7 @@ class GUI:
             dpg.configure_item("stop", enabled=True)
             dpg.configure_item("start", enabled=False)
             self.start_time = time.perf_counter()
-            self.scrapingthread = threading.Thread(target=self.scraper_thread, args=(query, excel_name, limit))
+            self.scrapingthread = threading.Thread(target=self.scraper_thread, args=(query, excel_name, limit, published_after, published_before))
             self.scrapingthread.start()
 
     def check_queue_callback(self):
@@ -93,7 +104,7 @@ class GUI:
 
     def initiate_gui(self):
         dpg.create_context()
-        dpg.create_viewport(title='Youtube Scraper Api Version', width=800, height=600, vsync=True)
+        dpg.create_viewport(title='Youtube Scraper Api Version', width=800, height=700, vsync=True)
         dpg.setup_dearpygui()
 
         with dpg.font_registry():
@@ -111,6 +122,7 @@ class GUI:
         dpg.bind_theme(global_theme)
         with dpg.window(tag="Youtube Scraper"):
             dpg.add_text("Youtube Scraper Api Version", indent=280)
+            dpg.add_separator()
             dpg.add_text("Enter query:")
             dpg.add_input_text(tag="search_query", width=300)
             dpg.add_text("Enter Excel File name: ")
@@ -118,13 +130,17 @@ class GUI:
             dpg.add_text("Enter Max limit: ")
             dpg.add_input_int(tag="max_limit", width=300, default_value=100)
 
-            dpg.add_button(label="Start", callback=self.start_scraper, pos=[10, 510], width=100, height=40, tag="start")
-            dpg.add_button(label="Stop", callback=self.stop_thread, pos=[120, 510], width=100, height=40, enabled=False, tag="stop")
-            dpg.add_separator()
+            dpg.add_text("Published After:", pos=[500, 300])
+            dpg.add_date_picker(tag="published_after", pos=[500, 340])
+            dpg.add_text("Published Before:", pos=[500, 40])
+            dpg.add_date_picker(tag="published_before", pos=[500, 80])
+
+            dpg.add_button(label="Start", callback=self.start_scraper, pos=[10, 610], width=100, height=40, tag="start")
+            dpg.add_button(label="Stop", callback=self.stop_thread, pos=[120, 610], width=100, height=40, enabled=False, tag="stop")
             dpg.add_text("Total Videos Found: 0", tag="total_vid_found")
             dpg.add_text("Total Videos Processed: 0", tag="total_video_processed")
             dpg.add_text("Total Chapters Found: 0", tag="total_chapter_found")
-            dpg.add_text("Status: Not Running", tag="status", pos=[600, 520])
+            dpg.add_text("Status: Not Running", tag="status", pos=[600, 620])
             dpg.bind_font(self.default_font)
 
         dpg.show_viewport()

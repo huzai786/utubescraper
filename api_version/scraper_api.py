@@ -7,7 +7,7 @@ from openpyxl import Workbook
 from settings import api_key
 
 class YoutubeChapterScraperApi:
-    def __init__(self, query, excelname, limit, update_ui_queue: queue.Queue, event: Event) -> None:
+    def __init__(self, query, excelname, limit, update_ui_queue: queue.Queue, event: Event, published_after=None, published_before=None) -> None:
         self.query = query
         self.excelname: str = excelname
         self.limit = limit
@@ -25,9 +25,11 @@ class YoutubeChapterScraperApi:
         self.thread1 = None
         self.thread2 = None
         self.thread3 = None
+        self.published_after = published_after
+        self.published_before = published_before
 
     def startScraping(self):
-        self.video_ids = self.api_search.search_results(self.query, self.limit)
+        self.video_ids = self.api_search.search_results(self.query, self.limit, self.published_after, self.published_before)
         self.start_chapter_scraper_thread()
 
 
